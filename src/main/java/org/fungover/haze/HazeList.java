@@ -42,6 +42,7 @@ public class HazeList {
         }
 
         int insertIndex = before ? pivotIndex : pivotIndex + 1;
+        // Insert relative to the pivot and write the serialized list back to the DB.
         elements.add(insertIndex, elementToInsert);
 
         hazeDatabase.addValue(key, listValueAsString(elements));
@@ -55,6 +56,7 @@ public class HazeList {
         List<String> newList = inputList.stream()
                 .skip(2)
                 .collect(Collectors.toCollection(ArrayList::new));
+        // LPUSH prepends values from left to right, so the incoming slice is reversed first.
         Collections.reverse(newList);
 
         String oldListAsString = hazeDatabase.containsKey(key) ? hazeDatabase.getValue(key) : "";
@@ -82,6 +84,7 @@ public class HazeList {
 
         currentValues.addAll(newInputs);
 
+        // Lists are persisted as a CRLF-delimited string in the key/value store.
         String newListAsString = listValueAsString(currentValues);
         hazeDatabase.addValue(key, newListAsString);
 
@@ -219,6 +222,7 @@ public class HazeList {
         else
             return "-Invalid input for FROM and WHERE.\r\n";
 
+        // Both source and destination are updated after the move to keep state consistent.
         hazeDatabase.addValue(source, listValueAsString(sourceList));
         hazeDatabase.addValue(destination, listValueAsString(destinationList));
 
@@ -290,6 +294,7 @@ public class HazeList {
     }
     @SuppressWarnings("squid:S6204")
     public static List<String> convertToList(String textToSplit) {
+        // Preserve trailing empty elements so list round-tripping stays predictable.
         return Stream.of(textToSplit.split("\r\n", -1))
                 .collect(Collectors.toList());
     }
@@ -316,6 +321,7 @@ public class HazeList {
             return NIL_RESPONSE;
         String result;
         if(index<0){
+            // Negative indexes are resolved relative to the end of the list.
             int newIndex = (data.size()) + index;
             result = data.get(newIndex);
             return "$" + result.length() + "\r\n" + result + "\r\n";
@@ -347,7 +353,7 @@ public class HazeList {
         }
             int index;
             if (inputlist.get(2).equals("-1")) {
-
+                // This implementation treats -1 as a convenience alias for the last element.
                 List<String> list = getValueAsList(hazeDatabase.getValue(key));
                 index = list.size() - 1;
             } else {

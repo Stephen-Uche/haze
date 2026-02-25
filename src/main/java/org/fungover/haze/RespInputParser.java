@@ -16,7 +16,7 @@ public class RespInputParser {
 
     public static void readInputStream(BufferedReader input, List<String> inputList, String firstReading) throws IOException {
         if (firstReading.startsWith("*")) {
-
+            // RESP arrays alternate length markers and payload lines.
             logger.debug("readInputStream: {} {} {}", input, inputList, firstReading);
             int size = Integer.parseInt(firstReading.substring(1)) * 2;
             for (int i = 0; i < size; i++) {
@@ -25,6 +25,7 @@ public class RespInputParser {
                     inputList.add(temp);
             }
         } else {
+            // Fallback parser for plain text commands entered manually.
             String[] separated = firstReading.split("\\s");
             inputList.addAll(Arrays.asList(separated));
         }

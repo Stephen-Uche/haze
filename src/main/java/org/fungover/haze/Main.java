@@ -19,8 +19,6 @@ public class Main {
 
 
     public static void main(String[] args) {
-
-
         Initialize initialize = new Initialize();
         initialize.importCliOptions(args);
         HazeDatabase hazeDatabase = new HazeDatabase();
@@ -35,6 +33,7 @@ public class Main {
 
         try (ServerSocket serverSocket = new ServerSocket()) {
             serverSocket.setReuseAddress(true);
+            // Bind using CLI/env-configured port before entering the accept loop.
             serverSocket.bind(new InetSocketAddress(initialize.getPort()));
             while (serverOpen) {
                 var client = serverSocket.accept();
@@ -43,6 +42,7 @@ public class Main {
                 Runnable newThread = () -> {
                     try {
                         BufferedReader input = new BufferedReader(new InputStreamReader(client.getInputStream()));
+                        // AUTH status is tracked per client connection.
                         boolean clientAuthenticated = false;
                         while (!client.isClosed()) {
                             List<String> inputList = new ArrayList<>();
@@ -57,6 +57,7 @@ public class Main {
 
                             readInputStream(input, inputList, firstReading);
 
+                            // If auth is enabled, AUTH must be processed before normal commands.
                             clientAuthenticated = Auth.authenticateClient(auth, isPasswordSet, client, inputList, clientAuthenticated);
 
                             client.getOutputStream().write(executeCommand(hazeDatabase, inputList, hazeList).getBytes());
@@ -72,6 +73,7 @@ public class Main {
                         logger.error(e);
                     }
                 };
+                // Each client is handled on a virtual thread to keep blocking I/O simple.
                 Thread.startVirtualThread(newThread);
             }
         } catch (IOException e) {
@@ -105,6 +107,7 @@ public class Main {
         try {
             commandEnum = Command.valueOf(command);
         } catch (IllegalArgumentException ex) {
+            // Unknown commands return a RESP error instead of throwing to the socket loop.
             return "-ERR unknown command\r\n";
         }
 
@@ -138,6 +141,7 @@ public class Main {
         logger.debug("readInputStream: {} {} {}", () -> input, () -> inputList, () -> firstReading);
         int size;
         if (firstReading.startsWith("*")) {
+            // RESP array input: read element count * 2 lines (length markers + values).
             size = Integer.parseInt(firstReading.substring(1)) * 2;
             for (int i = 0; i < size; i++) {
                 String temp = input.readLine();
@@ -145,6 +149,7 @@ public class Main {
                     inputList.add(temp);
             }
         } else {
+            // Also supports simple whitespace-delimited input for manual testing.
             String[] seperated = firstReading.split("\\s");
             inputList.addAll(Arrays.asList(seperated));
         }

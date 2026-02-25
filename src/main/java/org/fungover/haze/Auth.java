@@ -14,7 +14,7 @@ public class Auth {
     }
 
     public boolean authenticate(String password, Socket client) {
-
+        // Authentication is connection-scoped; failed auth closes output for that client.
         if (this.password.equals(password)) {
             return true;
         }
@@ -28,6 +28,7 @@ public class Auth {
     }
 
     public static boolean authenticateClient(Auth auth, boolean isPasswordSet, Socket client, List<String> inputList, boolean clientAuthenticated) throws IOException {
+        // Only treat AUTH as a special case before command execution when auth is enabled.
         if (authCommandReceived(isPasswordSet, inputList, clientAuthenticated))
             return auth.authenticate(inputList.get(1), client);
 
@@ -47,6 +48,7 @@ public class Auth {
     }
 
     public static byte[] printAuthError() {
+        // Returned as a RESP-style error string payload to the client.
         return "-Ah ah ah, you didn't say the magic word. https://tinyurl.com/38e7yvp8".getBytes();
     }
 

@@ -1,107 +1,100 @@
 
 
+# Haze
 
+Haze is a lightweight Redis-like key/value database written in Java that speaks RESP (Redis Serialization Protocol).
 
+## Features
 
+- RESP-compatible command parsing
+- In-memory key/value storage
+- Basic list operations
+- Optional password authentication
+- Snapshot-style save-to-file support
+- Configurable port via CLI or environment variables
 
+## Requirements
 
+- Java 21 (project is configured with `maven.compiler.release=21`)
+- Maven 3.8.1+ (for building/running with Maven)
 
+## Run Locally
 
+### Option 1: Run with Maven
 
+```bash
+mvn compile exec:java -Dexec.mainClass=org.fungover.haze.Main
+```
 
+### Option 2: Run compiled classes directly
 
+If the project is already compiled and the dependencies exist in your local Maven cache:
 
+```bash
+java -cp "target/classes:$HOME/.m2/repository/org/apache/logging/log4j/log4j-api/2.22.1/log4j-api-2.22.1.jar:$HOME/.m2/repository/org/apache/logging/log4j/log4j-core/2.22.1/log4j-core-2.22.1.jar" org.fungover.haze.Main
+```
 
+### Option 3: Run with Docker
 
-<h1 align="center">
-    <img src="https://www.iths.se/wp-content/uploads/2016/02/thumbnails/ithslogoliggandepayoffrgb-4601-1280x450.png" height="130" alt="ITHS">
-</h1>
+```bash
+docker pull fungover/haze
+docker run -p 6379:6379 fungover/haze
+```
 
-<section>
-<div align="center">
-    <a href="https://github.com/fungover/haze/actions/workflows/maven.yml">
-        <img src="https://github.com/fungover/haze/actions/workflows/maven.yml/badge.svg" alt="Java CI with Maven workflow badge"/>
-    </a>
-    <a href="https://github.com/fungover/haze/actions/workflows/release-drafter.yml">
-        <img src="https://github.com/fungover/haze/actions/workflows/release-drafter.yml/badge.svg" alt="Release Drafter workflow badge"/>
-    </a>
-</div>
-<div align="center">
-    <a href="https://github.com/fungover/haze/issues">
-        <img src="https://img.shields.io/github/issues-raw/fungover/haze" alt="Open issues workflow badge"/>
-    </a>
-    <a href="https://github.com/fungover/haze/pulls">
-        <img src="https://img.shields.io/github/issues-pr/fungover/haze" alt="Pull request workflow badge"/>
-    </a>
-    <a href="https://github.com/fungover/haze/issues?q=is%3Aissue+is%3Aclosed">
-        <img src="https://img.shields.io/github/issues-closed-raw/fungover/haze" alt="Open issues workflow badge"/>
-    </a>
-</div>
-<div align="center">
-    <a href="https://github.com/fungover/haze/releases">
-        <img src="https://img.shields.io/github/v/release/fungover/haze?display_name=tag&sort=semver" alt="Release workflow badge"/>
-    </a>
-    <a href="https://github.com/fungover/haze/pulse">
-        <img src="https://img.shields.io/github/commit-activity/m/fungover/haze" alt="Commit activity workflow badge"/>
-    </a>
-</div>
-<div align="center">
-    <a href="https://github.com/fungover/haze/graphs/contributors">
-        <img src="https://img.shields.io/github/contributors/fungover/haze" alt="Contributors workflow badge"/>
-    </a>
-    <img src="https://img.shields.io/github/languages/top/fungover/haze" alt="Language workflow badge"/>
-</div>
-</section>
+## Configuration
 
+Haze supports CLI flags and environment variables.
 
-# Haze:
-Key-Value database that talks RESP
+### Port
 
-## Topics
-java redis docker-container maven-pom sonarqube sonarcloud log4j2 html
+- CLI: `-p 6440` or `--port 6440`
+- Env: `HAZE_PORT=6440`
+- Default: `6379`
 
-## Instructions for Haze:
-      
-    
- 1. - Open the command prompt and type in the following:  
-     ```docker pull fungover/haze```(This downloads the Docker image)
+### Password (optional)
 
- 2.    - Start a new container with the image, mapping the port 6379 on the host to port 6379 on the container:
-     ```docker run -p 6379:6379 fungover/haze```
+- CLI: `-pw yourpassword` or `--password yourpassword`
+- Env: `HAZE_PASSWORD=yourpassword`
 
-    
-   -   You can change the behaviour of the server by putting in environment variables when starting the container. For example, you can set the server port to 6440. To do this:
-    ``docker run -p 6440:6440 -e HAZE_PORT=6440 fungover/haze``.
+## Supported Commands
 
+- `SET`
+- `GET`
+- `DEL`
+- `PING`
+- `SETNX`
+- `EXISTS`
+- `SAVE`
+- `AUTH`
+- `INCR`
+- `DECR`
+- `GETDEL`
+- `RPUSH`
+- `LPUSH`
+- `LPOP`
+- `RPOP`
+- `LLEN`
+- `LMOVE`
+- `LTRIM`
+- `LINDEX`
+- `LSET`
+- `LINSERT`
 
-## Commands:
+## Example Commands
 
-       Commands that the Server support:
-      
- 
-  - SET:
-     Sets a value to a key in Redis.
-- GET:
-    Retrieves a value to a key in Redis.
-- DEL:
-    Removes the specified keys.
-- PING:
-    Tests if the Redis server is running. If the server is running, it returns "PONG".
-- SETNX:
-    Set the value of a key, only if the key does not already exists.
-- EXISTS:
-Returns if key exists, it returns 1 if the key exists, and 0 otherwise.
-- SAVE:
-   Saves the current state of the dataset. It is helpful if you are creating backups or snapshots.
+```text
+PING
+SET key1 Hi
+GET key1
+SETNX mykey Hello
+EXISTS key1
+DEL key1
+RPUSH mylist a b c
+LPOP mylist
+```
 
-   
+## Notes
 
-## Examples:
-  1. ```SET key1 "Hi"```
-  2. ```GET key1```
-  3. ```DEL key1```
-  4. ```PING "PONG"```
-  5. ```SETNX mykey "Hello"```
-  6. ```EXISTS key1```
-  
-  
+- Data is stored in memory while the server is running.
+- `SAVE` writes a snapshot file under `~/fungover/haze/`.
+- The server uses virtual threads for handling client connections.

@@ -15,6 +15,7 @@ public class HazeDatabase {
 
     public HazeDatabase() {
         this.database = new HashMap<>();
+        // Single lock keeps compound read/modify/write operations thread-safe.
         this.lock = new ReentrantLock();
     }
 
@@ -48,6 +49,7 @@ public class HazeDatabase {
         try {
             if (database.containsKey(inputList.get(1))) {
                 var value = database.get(inputList.get(1));
+                // Return a bulk string response using RESP framing.
                 return "$" + value.length() + "\r\n" + value + "\r\n";
             } else return "$-1\r\n";
         } finally {
@@ -134,6 +136,7 @@ public class HazeDatabase {
         Map<String, String> shallowCopy;
         lock.lock();
         try {
+            // Snapshot copy is used by SAVE and shutdown hooks.
             shallowCopy = Map.copyOf(database);
         } finally {
             lock.unlock();
@@ -150,6 +153,7 @@ public class HazeDatabase {
 
         if (messageList.size() == 1)
             return "+PONG\r\n";
+        // RESP PING supports an optional echo message payload.
         else return "$" + (messageList.get(1)).length() + "\r\n" + messageList.get(1) + "\r\n";
     }
 
@@ -182,6 +186,7 @@ public class HazeDatabase {
             }
             String value = database.get(key);
             try {
+                // Store numbers as strings internally, converting only for arithmetic commands.
                 long longValue = Long.parseLong(value);
                 longValue++;
                 database.put(key, String.valueOf(longValue));

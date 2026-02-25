@@ -29,6 +29,7 @@ public class SaveFile {
         Path h = Path.of(homeFolder, "fungover", "haze");
         saveFolder = h;
         try {
+            // Creates a fixed save directory under the user's home folder.
             createDirectory(f);
             createDirectory(h);
         } catch (IOException e) {
@@ -43,6 +44,7 @@ public class SaveFile {
         String fileName = "Data" + "-" + format.format(date);
         String fileFormat = ".txt";
         createFolder();
+        // A timestamped filename is generated for each save/snapshot operation.
         return Path.of(saveFolder.toString(), fileName + fileFormat);
     }
 
@@ -65,6 +67,7 @@ public class SaveFile {
         String onSuccess = "+OK\r\n";
         String onError = "-Error 'message'\r\n";
         createFile();
+        // Persist entries as alternating key/value lines in a plain text snapshot.
         String convertMapToString = keyValues.entrySet().stream().map(e -> e.getKey() + "\n" + e.getValue() + "\n").collect(Collectors.joining());
         try {
             Files.writeString(getPath(), convertMapToString, StandardOpenOption.APPEND);
